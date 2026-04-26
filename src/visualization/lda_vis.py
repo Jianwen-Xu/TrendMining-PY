@@ -29,6 +29,7 @@ def save_interactive_lda(model, dtm, vectorizer, output_path: str = "output/lda_
     in this release.
     """
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
-    vis_data = pyLDAvis.lda_model.prepare(model, dtm, vectorizer, sort_topics=False)
+    # mds='tsne' avoids complex128 eigenvalue issue that PCoA/MDS produces with sklearn LDA
+    vis_data = pyLDAvis.lda_model.prepare(model, dtm, vectorizer, sort_topics=False, mds='tsne')
     pyLDAvis.save_html(vis_data, output_path)
     return output_path
