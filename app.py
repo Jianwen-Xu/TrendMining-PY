@@ -27,7 +27,7 @@ st.title("TrendMining — Software Engineering Trend Analysis")
 # --- Sidebar ---
 with st.sidebar:
     st.header("Configuration")
-    source = st.selectbox("Data Source", ["scopus", "stackoverflow", "twitter", "github"])
+    source = st.selectbox("Data Source", ["scopus", "stackoverflow", "github"])
     query = st.text_input("Search Query", value="devops")
     if source == "github":
         gh_mode = st.radio("GitHub mode", ["Topics (keyword search)", "Trending (today's hot repos)"], index=0)
@@ -85,8 +85,6 @@ if fetch_btn:
                 df = ScopusClient(scopus_key).fetch(query, max_results=500)
             elif source == "stackoverflow":
                 df = StackOverflowClient(so_key).fetch(query)
-            elif source == "twitter":
-                df = fetch_tweets(f"#{query}", max_tweets=2000)
             else:
                 if "Topics" in gh_mode:
                     df = fetch_github_topics(topic=query, language=gh_language)
@@ -100,7 +98,10 @@ if fetch_btn:
     abstract_texts = [t for t in df["Abstract_clean"].dropna().tolist() if t.strip()]
     if len(abstract_texts) < len(df) * 0.1:
         # Fewer than 10% have abstracts — fall back to titles
-        title_texts = [clean_scopus(str(t)) for t in df["Title"].dropna().tolist() if str(t).strip()]
+        if "Title_clean" in df.columns:
+            title_texts = [t for t in df["Title_clean"].dropna().tolist() if str(t).strip()]
+        else:
+            title_texts = [clean_scopus(str(t)) for t in df["Title"].dropna().tolist() if str(t).strip()]
         texts = abstract_texts + title_texts
         st.warning(f"Only {len(abstract_texts)}/{len(df)} records have abstracts. Using titles as fallback.")
     else:
