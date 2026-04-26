@@ -44,24 +44,26 @@ class ScopusClient:
 
     def fetch(self, query: str, max_results: int = 5000) -> pd.DataFrame:
         rows = []
-        cursor = "*"
+        page_size = 25  # standard API key limit
+        start = 0
         while len(rows) < max_results:
             params = {
                 "query": f'TITLE-ABS-KEY("{query}")',
-                "count": 200,
-                "cursor": cursor,
+                "count": page_size,
+                "start": start,
                 "field": "dc:identifier,dc:title,dc:creator,dc:description,prism:publicationName,prism:coverDate,prism:doi,citedby-count,subtype,subtypeDescription,prism:pageRange,author,affiliation",
             }
             resp = requests.get(SCOPUS_SEARCH_URL, headers=self.headers, params=params, timeout=30)
             resp.raise_for_status()
             data = resp.json().get("search-results", {})
+            total = _safe_int(data.get("opensearch:totalResults", 0))
             entries = data.get("entry", [])
             if not entries:
                 break
             for entry in entries:
                 rows.append(parse_entry(entry))
-            cursor = data.get("cursor", {}).get("@next", "")
-            if not cursor:
+            start += len(entries)
+            if start >= total:
                 break
         rows = rows[:max_results]
         df = pd.DataFrame(rows)
