@@ -1,6 +1,6 @@
 # TrendMining-PY
 
-Python rewrite of [TrendMining](../TrendMining). Mines emerging trends in software engineering from Scopus, StackOverflow, Twitter, and GitHub Trending.
+Python rewrite of [TrendMining](https://github.com/Jianwen-Xu/TrendMining). Mines emerging trends in software engineering from Scopus, StackOverflow, Twitter, and GitHub Trending.
 
 ## Quick Start
 
