@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from src.analysis.lda_model import build_vectorizer, build_lda, compute_perplexity
+from src.analysis.lda_model import build_vectorizer, build_lda, compute_perplexity, optimize_lda
 
 DOCS = [
     "docker container deployment kubernetes cluster",
@@ -37,3 +37,15 @@ def test_compute_perplexity_is_positive_float():
     perplexity = compute_perplexity(model, dtm)
     assert isinstance(perplexity, float)
     assert perplexity > 0
+
+
+def test_optimize_lda_returns_valid_params():
+    docs = DOCS * 5  # replicate for stability
+    dtm, vectorizer = build_vectorizer(docs)
+    result = optimize_lda(dtm, k_min=2, k_max=5, maxiter=2, popsize=3)
+    assert "k" in result
+    assert "alpha" in result
+    assert "beta" in result
+    assert 2 <= result["k"] <= 5
+    assert 0 < result["alpha"] <= 1.0
+    assert 0 < result["beta"] <= 0.3
