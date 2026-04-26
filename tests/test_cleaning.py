@@ -16,6 +16,20 @@ def test_clean_scopus_removes_copyright():
     assert "copyright" not in result.lower()
     assert "elsevier" not in result.lower()
 
+def test_clean_scopus_removes_non_elsevier_copyright():
+    text = "Research findings. © 2021 Springer Nature. All rights reserved."
+    result = clean_scopus(text)
+    assert "springer" not in result.lower()
+    assert "rights reserved" not in result.lower()
+
+def test_clean_text_cleaner_handles_non_string():
+    from src.cleaning.text_cleaner import normalize_text, clean_scopus, clean_twitter, clean_stackoverflow
+    assert normalize_text(None) == ""
+    assert normalize_text(123) == ""
+    assert clean_scopus(None) == ""
+    assert clean_twitter(None) == ""
+    assert clean_stackoverflow(None) == ""
+
 def test_clean_twitter_removes_urls():
     text = "Check this https://t.co/abc123 out"
     result = clean_twitter(text)

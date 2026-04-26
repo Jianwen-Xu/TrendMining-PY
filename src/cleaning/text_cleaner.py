@@ -17,7 +17,9 @@ def normalize_text(text: str) -> str:
 def clean_scopus(text: str) -> str:
     if not isinstance(text, str):
         return ""
-    text = re.sub(r"copyright\s*©.*?(reserved|elsevier[^.]*\.)", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"copyright\s*©[^.]*\.", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"©[^.]*\.", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"copyright\s+\d{4}[^.]*\.", "", text, flags=re.IGNORECASE)
     text = re.sub(r"all rights reserved\.?", "", text, flags=re.IGNORECASE)
     return normalize_text(text)
 
@@ -34,8 +36,10 @@ def clean_twitter(text: str) -> str:
 def clean_stackoverflow(text: str) -> str:
     if not isinstance(text, str):
         return ""
-    text = re.sub(r"<pre>.*?</pre>", "", text, flags=re.DOTALL)
-    text = re.sub(r"<code>.*?</code>", "", text, flags=re.DOTALL)
-    text = re.sub(r"<[^>]+>", " ", text)
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(text, "html.parser")
+    for tag in soup.find_all(["pre", "code"]):
+        tag.decompose()
+    text = soup.get_text(separator=" ")
     text = re.sub(r"\{[^}]*\}", "", text)
     return normalize_text(text)
