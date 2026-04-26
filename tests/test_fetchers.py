@@ -151,3 +151,45 @@ def test_fetch_tweets_empty_returns_dataframe():
     df = fetch_tweets("__no_results_query_xyz__", max_tweets=0)
     assert isinstance(df, pd.DataFrame)
     assert "Abstract_clean" in df.columns
+
+
+# ---------------------------------------------------------------------------
+# Task 5b: GitHub Trending scraper tests
+# ---------------------------------------------------------------------------
+from src.fetchers.github_trending import parse_repo_row, fetch_github_trending
+
+SAMPLE_GITHUB_HTML = """
+<article class="Box-row">
+  <h2 class="h3 lh-condensed">
+    <a href="/torvalds/linux">torvalds / linux</a>
+  </h2>
+  <p class="col-9 color-fg-muted my-1 pr-4">The Linux kernel source tree</p>
+  <span class="d-inline-block ml-0 mr-3" itemprop="programmingLanguage">C</span>
+  <span class="d-inline-block float-sm-right">
+    <a class="Link--primary no-underline" href="/torvalds/linux/stargazers">1,234 stars today</a>
+  </span>
+</article>
+"""
+
+
+def test_parse_repo_row():
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(SAMPLE_GITHUB_HTML, "html.parser")
+    article = soup.find("article")
+    row = parse_repo_row(article)
+    assert "linux" in row["Title"].lower()
+    assert row["Abstract"] == "The Linux kernel source tree"
+    assert row["Tags"] == "C"
+    assert row["Cites"] == 1234
+
+
+def test_fetch_github_trending_returns_dataframe():
+    mock_response = MagicMock()
+    mock_response.text = SAMPLE_GITHUB_HTML * 3
+    mock_response.raise_for_status.return_value = None
+    with patch("src.fetchers.github_trending.requests.get", return_value=mock_response):
+        df = fetch_github_trending(query="devops", period="daily")
+    assert isinstance(df, pd.DataFrame)
+    assert len(df) == 3
+    assert "Abstract_clean" in df.columns
+    assert "Date" in df.columns
