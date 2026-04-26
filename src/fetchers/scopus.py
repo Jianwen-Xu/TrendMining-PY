@@ -5,15 +5,24 @@ from src.cleaning.text_cleaner import clean_scopus
 SCOPUS_SEARCH_URL = "https://api.elsevier.com/content/search/scopus"
 
 
+def _safe_int(value) -> int:
+    try:
+        return int(value or 0)
+    except (ValueError, TypeError):
+        return 0
+
+
 def parse_entry(entry: dict) -> dict:
-    authors = entry.get("author", [])
-    affiliations = entry.get("affiliation", [])
+    authors_raw = entry.get("author", [])
+    authors = authors_raw if isinstance(authors_raw, list) else ([authors_raw] if authors_raw else [])
+    affiliations_raw = entry.get("affiliation", [])
+    affiliations = affiliations_raw if isinstance(affiliations_raw, list) else ([affiliations_raw] if affiliations_raw else [])
     return {
         "Id": entry.get("dc:identifier", ""),
         "Title": entry.get("dc:title", ""),
         "Abstract": entry.get("dc:description", ""),
         "Date": entry.get("prism:coverDate", ""),
-        "Cites": int(entry.get("citedby-count", 0) or 0),
+        "Cites": _safe_int(entry.get("citedby-count", 0)),
         "PubName": entry.get("prism:publicationName", ""),
         "DOI": entry.get("prism:doi", ""),
         "PubType1": entry.get("subtypeDescription", ""),
@@ -39,7 +48,7 @@ class ScopusClient:
         while len(rows) < max_results:
             params = {
                 "query": f'TITLE-ABS-KEY("{query}")',
-                "count": 25,
+                "count": 200,
                 "cursor": cursor,
                 "field": "dc:identifier,dc:title,dc:creator,dc:description,prism:publicationName,prism:coverDate,prism:doi,citedby-count,subtype,subtypeDescription,prism:pageRange,author,affiliation",
             }
@@ -54,6 +63,9 @@ class ScopusClient:
             cursor = data.get("cursor", {}).get("@next", "")
             if not cursor:
                 break
+        rows = rows[:max_results]
         df = pd.DataFrame(rows)
+        if df.empty:
+            return pd.DataFrame(columns=list(parse_entry({}).keys()) + ["Abstract_clean"])
         df["Abstract_clean"] = df["Abstract"].apply(clean_scopus)
         return df

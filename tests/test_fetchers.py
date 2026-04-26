@@ -37,8 +37,21 @@ def test_scopus_client_returns_dataframe():
         }
     }
     mock_response.status_code = 200
-    with patch("requests.get", return_value=mock_response):
+    with patch("src.fetchers.scopus.requests.get", return_value=mock_response):
         df = client.fetch("devops", max_results=1)
     assert isinstance(df, pd.DataFrame)
     assert len(df) == 1
     assert "Abstract_clean" in df.columns
+
+
+def test_parse_entry_single_author_as_dict():
+    entry = {
+        "dc:title": "Solo Paper",
+        "citedby-count": "1",
+        "author": {"authid": "999", "authname": "Solo, A."},
+        "affiliation": {"affilname": "Cambridge", "affiliation-country": "UK"},
+    }
+    row = parse_entry(entry)
+    assert row["AuthorCount"] == 1
+    assert row["Authors"] == "Solo, A."
+    assert row["Affiliations"] == "Cambridge"
