@@ -45,9 +45,9 @@ def parse_repo_row(article) -> dict:
 
 
 def fetch_github_trending(query: str = "", period: str = "daily", language: str = "") -> pd.DataFrame:
-    if query:
-        url = f"https://github.com/topics/{query}"
-    elif language:
+    # GitHub Trending has no keyword filter — query param is ignored.
+    # Language filter uses path: /trending/{language}
+    if language:
         url = f"{TRENDING_URL}/{language}"
     else:
         url = TRENDING_URL
