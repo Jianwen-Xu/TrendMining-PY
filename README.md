@@ -21,10 +21,11 @@ python main.py --query devops --source scopus --k 20 --skip-fetch
 
 | Source | Auth | Notes |
 |---|---|---|
-| Scopus | API key (Elsevier) | Set `SCOPUS_API_KEY` env var |
-| StackOverflow | API key (StackApps) | Set `SO_API_KEY` env var |
+| Scopus | API key required | Set `SCOPUS_API_KEY` in `.env` or sidebar; sorted by citation count for historical spread |
+| StackOverflow | Optional | Set `SO_API_KEY` in `.env` or leave blank (300 req/day unauthenticated); max 2500 results |
 | Twitter | None | Uses snscrape (no API key needed) |
-| GitHub Trending | None | Scrapes github.com/trending |
+| GitHub Topics | None | Scrapes `github.com/topics/{query}?l={language}` — keyword searchable |
+| GitHub Trending | None | Scrapes `github.com/trending/{language}?since={period}` — no keyword filter |
 
 ## Pipeline
 

@@ -16,11 +16,11 @@ def _safe_int(value) -> int:
 def parse_so_item(item: dict) -> dict:
     ts = item.get("creation_date", 0)
     la_ts = item.get("last_activity_date", 0)
-    body = item.get("body", "")
-    abstract_clean = clean_stackoverflow(body)
+    body = item.get("body") or ""
+    abstract_clean = clean_stackoverflow(body) if body else ""
     return {
         "Q_id": item.get("question_id", ""),
-        "AuthorId": item.get("owner", {}).get("user_id", ""),
+        "AuthorId": str(item.get("owner", {}).get("user_id") or ""),
         "Title": item.get("title", ""),
         "Abstract": body,
         "Abstract_clean": abstract_clean,
@@ -38,19 +38,18 @@ class StackOverflowClient:
     def __init__(self, api_key: str):
         self.api_key = api_key
 
-    def fetch(self, query: str, page_size: int = 100) -> pd.DataFrame:
+    def fetch(self, query: str, page_size: int = 100, max_pages: int = 25) -> pd.DataFrame:
         rows = []
         page = 1
-        while True:
+        while page <= max_pages:
             params = {
                 "q": query,
-                "tagged": query,
                 "pagesize": page_size,
                 "page": page,
                 "site": "stackoverflow",
-                "filter": "withbody",
-                "key": self.api_key,
             }
+            if self.api_key:
+                params["key"] = self.api_key
             resp = requests.get(SO_API_URL, params=params, timeout=30)
             resp.raise_for_status()
             data = resp.json()

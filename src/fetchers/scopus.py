@@ -28,11 +28,11 @@ def parse_entry(entry: dict) -> dict:
         "PubType1": entry.get("subtypeDescription", ""),
         "AuthorName": entry.get("dc:creator", ""),
         "AuthorCount": len(authors),
-        "Authors": "|".join(a.get("authname", "") for a in authors),
-        "AuthorIds": "|".join(a.get("authid", "") for a in authors),
+        "Authors": "|".join(a.get("authname") or "" for a in authors),
+        "AuthorIds": "|".join(a.get("authid") or "" for a in authors),
         "AffiliationCount": len(affiliations),
-        "Affiliations": "|".join(a.get("affilname", "") for a in affiliations),
-        "AffiliationCountries": "|".join(a.get("affiliation-country", "") for a in affiliations),
+        "Affiliations": "|".join(a.get("affilname") or "" for a in affiliations),
+        "AffiliationCountries": "|".join(a.get("affiliation-country") or "" for a in affiliations),
         "PageRange": entry.get("prism:pageRange", ""),
     }
 
@@ -51,6 +51,7 @@ class ScopusClient:
                 "query": f'TITLE-ABS-KEY("{query}")',
                 "count": page_size,
                 "start": start,
+                "sort": "citedby-count",
                 "field": "dc:identifier,dc:title,dc:creator,dc:description,prism:publicationName,prism:coverDate,prism:doi,citedby-count,subtype,subtypeDescription,prism:pageRange,author,affiliation",
             }
             resp = requests.get(SCOPUS_SEARCH_URL, headers=self.headers, params=params, timeout=30)

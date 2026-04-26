@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 import seaborn as sns
 
 
@@ -16,6 +17,7 @@ def plot_publications_per_year(df: pd.DataFrame, date_col: str = "Date", output_
     ax.set_title("Publications per Year")
     ax.set_xlabel("Year")
     ax.set_ylabel("Count")
+    ax.xaxis.set_major_locator(mticker.MaxNLocator(integer=True))
     fig.savefig(output_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     return output_path
@@ -31,6 +33,7 @@ def plot_citations_per_year(df: pd.DataFrame, date_col: str = "Date", cite_col: 
     ax.set_title("Total Citations per Year")
     ax.set_xlabel("Year")
     ax.set_ylabel("Total Citations")
+    ax.xaxis.set_major_locator(mticker.MaxNLocator(integer=True))
     fig.savefig(output_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     return output_path

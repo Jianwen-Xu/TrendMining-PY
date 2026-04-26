@@ -77,9 +77,6 @@ if fetch_btn:
         if source == "scopus" and not scopus_key:
             st.error("Scopus API Key required. Enter it in the sidebar or set SCOPUS_API_KEY in .env")
             st.stop()
-        if source == "stackoverflow" and not so_key:
-            st.error("StackOverflow API Key required. Enter it in the sidebar or set SO_API_KEY in .env")
-            st.stop()
         if use_cache and exists(cache_name, DATA_DIR):
             df = load(cache_name, DATA_DIR)
             st.success(f"Loaded {len(df)} cached records.")
