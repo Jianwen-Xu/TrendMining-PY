@@ -8,7 +8,7 @@ from config.settings import SCOPUS_API_KEY, SO_API_KEY, DATA_DIR, OUTPUT_DIR
 from src.fetchers.scopus import ScopusClient
 from src.fetchers.stackoverflow import StackOverflowClient
 from src.fetchers.twitter import fetch_tweets
-from src.fetchers.github_trending import fetch_github_trending
+from src.fetchers.github_trending import fetch_github_trending, fetch_github_topics
 from src.analysis.dtm import build_dtm
 from src.analysis.lda_model import build_vectorizer, build_lda, optimize_lda, get_top_words
 from src.analysis.trend_analysis import compute_topic_trends, classify_topics
@@ -30,9 +30,14 @@ with st.sidebar:
     source = st.selectbox("Data Source", ["scopus", "stackoverflow", "twitter", "github"])
     query = st.text_input("Search Query", value="devops")
     if source == "github":
-        gh_language = st.text_input("Language filter (e.g. python, typescript)", value="")
-        gh_period = st.selectbox("Period", ["daily", "weekly", "monthly"], index=0)
+        gh_mode = st.radio("GitHub mode", ["Topics (keyword search)", "Trending (today's hot repos)"], index=0)
+        gh_language = st.text_input("Language filter (e.g. python, typescript, shell)", value="")
+        if "Trending" in gh_mode:
+            gh_period = st.selectbox("Period", ["daily", "weekly", "monthly"], index=0)
+        else:
+            gh_period = "daily"
     else:
+        gh_mode = ""
         gh_language = ""
         gh_period = "daily"
     use_cache = st.checkbox("Use cached data", value=True)
@@ -62,7 +67,10 @@ for key in ["df", "texts", "model", "lda_dtm", "lda_vectorizer", "classified", "
 # --- Fetch & analyze ---
 if fetch_btn:
     if source == "github":
-        cache_name = f"github_{gh_language or 'all'}_{gh_period}"
+        if "Topics" in gh_mode:
+            cache_name = f"github_topics_{query}_{gh_language or 'all'}"
+        else:
+            cache_name = f"github_trending_{gh_language or 'all'}_{gh_period}"
     else:
         cache_name = f"{source}_{query}"
     with st.spinner(f"Fetching {source} data for '{query}'..."):
@@ -83,7 +91,10 @@ if fetch_btn:
             elif source == "twitter":
                 df = fetch_tweets(f"#{query}", max_tweets=2000)
             else:
-                df = fetch_github_trending(language=gh_language, period=gh_period)
+                if "Topics" in gh_mode:
+                    df = fetch_github_topics(topic=query, language=gh_language)
+                else:
+                    df = fetch_github_trending(language=gh_language, period=gh_period)
             save(df, cache_name, DATA_DIR)
             st.success(f"Fetched and cached {len(df)} records.")
     st.session_state.df = df
