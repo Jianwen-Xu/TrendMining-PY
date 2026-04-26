@@ -49,7 +49,7 @@ with st.sidebar:
     fetch_btn = st.button("Fetch & Analyze", type="primary")
 
 # --- Session state init ---
-for key in ["df", "model", "lda_dtm", "lda_vectorizer", "classified", "top_words"]:
+for key in ["df", "texts", "model", "lda_dtm", "lda_vectorizer", "classified", "top_words"]:
     if key not in st.session_state:
         st.session_state[key] = None
 
@@ -79,10 +79,21 @@ if fetch_btn:
             st.success(f"Fetched and cached {len(df)} records.")
     st.session_state.df = df
 
-    texts = df["Abstract_clean"].dropna().tolist()
+    from src.cleaning.text_cleaner import clean_scopus
+    abstract_texts = [t for t in df["Abstract_clean"].dropna().tolist() if t.strip()]
+    if len(abstract_texts) < len(df) * 0.1:
+        # Fewer than 10% have abstracts — fall back to titles
+        title_texts = [clean_scopus(str(t)) for t in df["Title"].dropna().tolist() if str(t).strip()]
+        texts = abstract_texts + title_texts
+        st.warning(f"Only {len(abstract_texts)}/{len(df)} records have abstracts. Using titles as fallback.")
+    else:
+        texts = abstract_texts
+    texts = [t for t in texts if t.strip()]
     if not texts:
-        st.error("No text data found.")
+        st.error("No usable text found. Abstracts and titles are empty.")
         st.stop()
+    st.info(f"Analyzing {len(texts)} text documents.")
+    st.session_state.texts = texts
 
     lda_dtm, lda_vectorizer = build_vectorizer(texts)
 
@@ -127,7 +138,7 @@ with tab1:
 
 with tab2:
     if st.session_state.df is not None:
-        texts = st.session_state.df["Abstract_clean"].dropna().tolist()
+        texts = st.session_state.texts or []
         col1, col2 = st.columns(2)
         with col1:
             st.subheader("Word Cloud")
