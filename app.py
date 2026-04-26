@@ -29,6 +29,12 @@ with st.sidebar:
     st.header("Configuration")
     source = st.selectbox("Data Source", ["scopus", "stackoverflow", "twitter", "github"])
     query = st.text_input("Search Query", value="devops")
+    if source == "github":
+        gh_language = st.text_input("Language filter (e.g. python, typescript)", value="")
+        gh_period = st.selectbox("Period", ["daily", "weekly", "monthly"], index=0)
+    else:
+        gh_language = ""
+        gh_period = "daily"
     use_cache = st.checkbox("Use cached data", value=True)
     st.divider()
     st.subheader("API Keys")
@@ -55,7 +61,10 @@ for key in ["df", "texts", "model", "lda_dtm", "lda_vectorizer", "classified", "
 
 # --- Fetch & analyze ---
 if fetch_btn:
-    cache_name = f"{source}_{query}"
+    if source == "github":
+        cache_name = f"github_{gh_language or 'all'}_{gh_period}"
+    else:
+        cache_name = f"{source}_{query}"
     with st.spinner(f"Fetching {source} data for '{query}'..."):
         if source == "scopus" and not scopus_key:
             st.error("Scopus API Key required. Enter it in the sidebar or set SCOPUS_API_KEY in .env")
@@ -74,7 +83,7 @@ if fetch_btn:
             elif source == "twitter":
                 df = fetch_tweets(f"#{query}", max_tweets=2000)
             else:
-                df = fetch_github_trending(query=query, period="daily")
+                df = fetch_github_trending(language=gh_language, period=gh_period)
             save(df, cache_name, DATA_DIR)
             st.success(f"Fetched and cached {len(df)} records.")
     st.session_state.df = df
