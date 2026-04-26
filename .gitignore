@@ -1,0 +1,29 @@
+# Secrets
+.env
+
+# Data and output (track dirs, not content)
+data/*
+!data/.gitkeep
+output/*
+!output/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Parquet, CSV, PDF, HTML outputs
+*.parquet
+*.csv
+
+# OS
+.DS_Store
+Thumbs.db
