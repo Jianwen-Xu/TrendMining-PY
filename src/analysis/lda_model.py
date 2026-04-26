@@ -12,15 +12,21 @@ EXTRA_STOPWORDS = {
 
 def build_vectorizer(docs: list, min_word_length: int = 3, min_df: int = 2, max_df: float = 0.9):
     token_pattern = rf"\b[a-z]{{{min_word_length},}}\b"
-    vectorizer = CountVectorizer(
-        lowercase=True,
-        min_df=min(min_df, max(1, len(docs) // 5)),
-        max_df=max_df,
-        token_pattern=token_pattern,
-        stop_words="english",
-    )
-    dtm = vectorizer.fit_transform(docs)
-    return dtm, vectorizer
+    effective_min_df = min(min_df, max(1, len(docs) // 5))
+    for md, mxd in [(effective_min_df, max_df), (1, 0.99), (1, 1.0)]:
+        vectorizer = CountVectorizer(
+            lowercase=True,
+            min_df=md,
+            max_df=mxd,
+            token_pattern=token_pattern,
+            stop_words="english",
+        )
+        try:
+            dtm = vectorizer.fit_transform(docs)
+            return dtm, vectorizer
+        except ValueError:
+            continue
+    raise ValueError("Could not build vocabulary from documents. Check that abstracts contain non-stopword text.")
 
 
 def build_lda(dtm, k: int, alpha: float = 0.1, beta: float = 0.01, passes: int = 20):
