@@ -31,6 +31,16 @@ with st.sidebar:
     query = st.text_input("Search Query", value="devops")
     use_cache = st.checkbox("Use cached data", value=True)
     st.divider()
+    st.subheader("API Keys")
+    if source == "scopus":
+        scopus_key = st.text_input("Scopus API Key", value=SCOPUS_API_KEY, type="password")
+    else:
+        scopus_key = SCOPUS_API_KEY
+    if source == "stackoverflow":
+        so_key = st.text_input("StackOverflow API Key", value=SO_API_KEY, type="password")
+    else:
+        so_key = SO_API_KEY
+    st.divider()
     st.subheader("LDA Settings")
     auto_optimize = st.checkbox("Auto-optimize hyperparameters (slow)", value=False)
     k = st.slider("Topics (k)", min_value=5, max_value=100, value=20, disabled=auto_optimize)
@@ -47,14 +57,20 @@ for key in ["df", "model", "lda_dtm", "lda_vectorizer", "classified", "top_words
 if fetch_btn:
     cache_name = f"{source}_{query}"
     with st.spinner(f"Fetching {source} data for '{query}'..."):
+        if source == "scopus" and not scopus_key:
+            st.error("Scopus API Key required. Enter it in the sidebar or set SCOPUS_API_KEY in .env")
+            st.stop()
+        if source == "stackoverflow" and not so_key:
+            st.error("StackOverflow API Key required. Enter it in the sidebar or set SO_API_KEY in .env")
+            st.stop()
         if use_cache and exists(cache_name, DATA_DIR):
             df = load(cache_name, DATA_DIR)
             st.success(f"Loaded {len(df)} cached records.")
         else:
             if source == "scopus":
-                df = ScopusClient(SCOPUS_API_KEY).fetch(query, max_results=500)
+                df = ScopusClient(scopus_key).fetch(query, max_results=500)
             elif source == "stackoverflow":
-                df = StackOverflowClient(SO_API_KEY).fetch(query)
+                df = StackOverflowClient(so_key).fetch(query)
             elif source == "twitter":
                 df = fetch_tweets(f"#{query}", max_tweets=2000)
             else:

@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 SCOPUS_API_KEY = os.getenv("SCOPUS_API_KEY", "")
 SO_API_KEY = os.getenv("SO_API_KEY", "")
