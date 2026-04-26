@@ -23,7 +23,6 @@ python main.py --query devops --source scopus --k 20 --skip-fetch
 |---|---|---|
 | Scopus | API key required | Set `SCOPUS_API_KEY` in `.env` or sidebar; sorted by citation count for historical spread |
 | StackOverflow | Optional | Set `SO_API_KEY` in `.env` or leave blank (300 req/day unauthenticated); max 2500 results |
-| Twitter | None | Uses snscrape (no API key needed) |
 | GitHub Topics | None | Scrapes `github.com/topics/{query}?l={language}` — keyword searchable |
 | GitHub Trending | None | Scrapes `github.com/trending/{language}?since={period}` — no keyword filter |
 
@@ -36,7 +35,7 @@ Fetch → Clean → DTM → LDA (optimized) → Trend Analysis → Visualization
 ## Tech Stack
 
 - Python 3.11+ (tested on 3.14)
-- pandas, requests, beautifulsoup4, snscrape
+- pandas, requests, beautifulsoup4
 - scikit-learn (LDA, DTM, clustering) — replaces gensim for Python 3.14 compatibility
 - scipy (differential evolution optimizer, Ward dendrogram)
 - matplotlib, seaborn, wordcloud, pyLDAvis
