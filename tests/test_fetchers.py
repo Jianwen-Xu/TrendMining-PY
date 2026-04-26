@@ -116,3 +116,38 @@ def test_so_client_returns_dataframe():
     assert isinstance(df, pd.DataFrame)
     assert len(df) == 1
     assert "Abstract_clean" in df.columns
+
+
+# ---------------------------------------------------------------------------
+# Task 5: Twitter fetcher tests
+# ---------------------------------------------------------------------------
+from src.fetchers.twitter import parse_tweet, fetch_tweets
+
+
+def test_parse_tweet():
+    import datetime
+
+    class MockUser:
+        username = "devops_fan"
+
+    class MockTweet:
+        id = 12345
+        user = MockUser()
+        date = datetime.datetime(2021, 6, 15)
+        rawContent = "Loving #devops with @docker! https://t.co/abc"
+        retweetCount = 10
+        hashtags = ["devops"]
+
+    row = parse_tweet(MockTweet())
+    assert row["AuthorName"] == "devops_fan"
+    assert row["Cites"] == 10
+    assert row["Date"] == "2021-06-15"
+    assert "http" not in row["Title_clean"]
+    assert "@docker" not in row["Title_clean"]
+
+
+def test_fetch_tweets_empty_returns_dataframe():
+    # When max_tweets=0, loop exits immediately -> empty DataFrame with correct columns
+    df = fetch_tweets("__no_results_query_xyz__", max_tweets=0)
+    assert isinstance(df, pd.DataFrame)
+    assert "Abstract_clean" in df.columns
